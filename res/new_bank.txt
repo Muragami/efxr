@@ -1,0 +1,22 @@
+_____  _____ ___         ___ ___    _ _
+| __\ \/ / __| _ \  ___  | __| _ \  | | |
+| _| >  <| _||   / |___| | _||  _/  |_  _|
+|___/_/\_\_| |_|_\       |___|_|(_)   |_| _
+__ _   _ _  _____ __ __ | |__  __ _ _ _ | |__
+/ _` | | ' \/ -_) V  V / | '_ \/ _` | ' \| / /
+\__,_| |_||_\___|\_/\_/  |_.__/\__,_|_||_|_\_\
+
+-=-=-=-=-=-=--=-=-=-=-=-=--=-=-=-=-=-=--=-=-=-
+
+types of banks:
+    LCODE: Generated code that will create the sounds in the bank (love2d)
+    SSTR8: Generated string that will create the sounds through efxr.lua
+    WAV16: Generated .wav 16 bit for each sound in the bank
+        
+|| Name:
+-- source bank
+|| Type:
+-- source bank
+-- opts LCODE SSTR8 WAV16
+-> EDIT ; create and start editing this bank
+-> MAIN

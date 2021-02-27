@@ -37,6 +37,20 @@ _INVALID = {}
 
 require 'screen'
 
+exec_table = {}
+
+exec_table['1SOUND'] = function() Screen:clear() Screen:read('res/1sound.txt') end
+exec_table['NEW_BANK'] = function() Screen:clear() Screen:read('res/new_bank.txt') end
+exec_table['MAIN'] = function() Screen:clear() Screen:read('res/splash.txt') end
+exec_table['ABOUT'] = function() Screen:clear() Screen:read('res/about.txt') end
+exec_table['README'] = function() Screen:clear() Screen:read('res/README.TXT') end
+exec_table['EXIT'] = function() love.event.quit() end
+
+function exec(self,cmd,actor)
+  print("exec() got: " .. cmd .. " from " .. self.name)
+  if exec_table[cmd] then exec_table[cmd](self,cmd,actor) end
+end
+
 -- Load some default values for our rectangle.
 function love.load()
   love.keyboard.setKeyRepeat(true)
@@ -45,11 +59,9 @@ function love.load()
   -- a fresh clean screen
   Screen:clear()
   -- add title
-  Screen:print("EFXR 0.1 by Muragami")
-  Screen:print("-")
-  Screen:print("Audio generator with keyboard controls only for the desktop!")
-  Screen:print("-")
   Screen:print(love.filesystem.lines('res/splash.txt'))
+
+  Screen.exec = exec
 end
 
 -- Increase the size of the rectangle every frame.
@@ -67,5 +79,8 @@ function love.keypressed( key, scancode, isrepeat )
   if key == 'space' then
     Screen:clear()
     Screen:print(love.filesystem.lines('res/README.TXT'))
+  end
+  if key == 'tab' then
+    Screen:print('You pressed tab!')
   end
 end

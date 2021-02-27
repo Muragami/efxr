@@ -35,6 +35,7 @@ Screen = {}
 
 function Screen:clear()
   -- determine the amount of text lines we will show
+  -- put us in a state without functions
   self.height = love.graphics.getHeight()
   self.width = love.graphics.getWidth()
   self.lines = math.floor(love.graphics.getHeight() / (self.font_size + self.font_padding)) - 1
@@ -45,12 +46,14 @@ function Screen:clear()
   self.line = {}
   self.fade = {}
   self.buffer = {}
-  self.rate = 1.0
+  self.action = {}
+  self.drate = 3
+  self.rate = self.drate
   self.next = 0.0
   self.scroll = 0
   self.page = 0
   for i=0,self.lines,1 do self.line[i] = _INVALID self.fade[i] = 0 end
-  print("Screen:clear() wiped " .. self.lines .. " lines")
+  if not self.name then self.name = "Screen" end
 end
 
 function Screen:draw()
@@ -87,9 +90,9 @@ function Screen:draw()
         if fade < 0 then
           local falpha = (1.0 - (0 - fade)) * 0.8 + 0.2
           love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
-          love.graphics.print(ln,dx+0.8,dy+0.8+fade * line_height)
+          love.graphics.print(ln,dx+0.8,dy+0.8-(fade * fade * line_height * 1.0))
           love.graphics.setColor(0.9, 1.0, 0.9, falpha)
-          love.graphics.print(ln,dx,dy+fade * line_height)
+          love.graphics.print(ln,dx,dy-(fade * fade * line_height * 1.0))
         else
           love.graphics.setColor(0.2, 0.2, 0.2, 1.0)
           love.graphics.print(ln,dx+0.8,dy+0.8)
@@ -127,7 +130,7 @@ function Screen:update(dt)
     end
   else
     -- since we aren't adding we are done, so reset add rate
-    self.rate = 1.0
+    self.rate = self.drate
   end
   -- update fades
   for i=0,self.lines+(self.page*self.lines)-1,1 do
@@ -142,12 +145,25 @@ function Screen:setFont(f,px)
   Screen.font = love.graphics.newFont(f, px)
   Screen.font_size = px
   Screen.font_padding = 2
-  print("Screen:setFont() now '" .. f .. "' lines at " .. px .. ' pixels')
 end
 
 function Screen:add(txt)
   self.line[self.pos] = txt
   self.fade[self.pos] = -1
+  self.sel = self.pos         -- automatically select last added line?
+  local tst = txt:sub(1,3)
+  if tst == '-> ' then
+    -- this is an action, fire off an event when it's triggered
+    self.action[self.pos] = { 'exec', txt:sub(4):match("([%w-._]+)") }
+    self.laction = self.pos
+  elseif tst == '|| ' then
+    -- this is editable
+    self.action[self.pos] = { 'edit', txt:sub(4):match("([%w-._]+)") }
+    self.laction = self.pos
+  elseif tst == '-- ' then
+    -- this is never shown, and describes a previous editable/action!
+    return
+  end
   self.pos = self.pos + 1
   if self.pos >= self.lines then
     local onpage = math.floor(self.pos / self.lines)
@@ -168,18 +184,22 @@ function Screen:print(txt,other)
     -- add ipairs from this table
     for _,v in ipairs(txt) do
       table.insert(self.buffer,txt)
-      self.rate = self.rate + 0.5   -- the more we add, accelerate our additions!
+      self.rate = self.rate + (0.5 * self.drate)   -- the more we add, accelerate our additions!
     end
   elseif type(txt) == 'function' then
     -- txt better be an iterator!
     for ln in txt do
       table.insert(self.buffer,ln)
-      self.rate = self.rate + 0.5   -- the more we add, accelerate our additions!
+      self.rate = self.rate + (0.5 * self.drate)   -- the more we add, accelerate our additions!
     end
   else
     table.insert(self.buffer,txt)
-    self.rate = self.rate + 0.5   -- the more we add, accelerate our additions!
+    self.rate = self.rate + (0.5 * self.drate)   -- the more we add, accelerate our additions!
   end
+end
+
+function Screen:read(fname)
+  self:print(love.filesystem.lines(fname))
 end
 
 function Screen:onKey(key,isrepeat)
@@ -213,5 +233,10 @@ function Screen:onKey(key,isrepeat)
     end
   elseif key == 'left' then
   elseif key == 'right' then
+  elseif key == 'return' or key == 'kpenter' then
+    local actor = self.action[self.sel]
+    if actor and self[actor[1]] then
+      self[actor[1]](self,actor[2],actor) -- exec(self,cmd,actor)
+    end
   end
 end

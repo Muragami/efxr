@@ -26,7 +26,7 @@
     Scalable TrueType fonts based on the iconic hardware VGA character set
 
     ______________________________________________________________________
-   
+
 
 
 INCLUDED FONTS:
@@ -48,13 +48,13 @@ ASPECT RATIO:
 SUPPORTED SCRIPTS:
 
 * "Flexi IBM VGA True" - an extended character set, mostly based on various
-                         code-pages from DOS (including Greek, Hebrew, 
-                         Cyrillic and many Latin scripts, box/block drawing 
+                         code-pages from DOS (including Greek, Hebrew,
+                         Cyrillic and many Latin scripts, box/block drawing
                          symbols, math and so on).
 
 * "Flexi IBM VGA True (437)" - contains only the characters from the original
-                               IBM PC code page 437 ("US-Latin").  Windows 
-                               detects it as 'OEM/DOS', so it's suitable for 
+                               IBM PC code page 437 ("US-Latin").  Windows
+                               detects it as 'OEM/DOS', so it's suitable for
                                your favorite .NFO viewer, or wherever you need
                                the 8-bit DOS encoding.
 
@@ -66,3 +66,7 @@ LICENSE:
 _________________________________________
 
 // VileR    2020-11    https://int10.org
+
+-========-
+-> ABOUT
+-> MAIN
