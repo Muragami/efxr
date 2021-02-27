@@ -184,6 +184,7 @@ function efxr.Sound:resetParameters()
     self.repeatspeed = 0.0
     self.waveform = efxr.WAVENAME['SQUARE']
     self.genWave = efxr.WAVEFUNC[self.waveform]
+    self.wavepow = nil  -- no quadratic on a default waveform
 
     self.envelope = { attack = 0.0, sustain = 0.3, punch = 0.0, decay = 0.4 }
     self.frequency = { start = 0.3, min = 0.0, slide = 0.0, dslide = 0.0 }
@@ -199,6 +200,8 @@ function efxr.Sound:sanitizeParameters()
     self.repeatspeed = clamp(self.repeatspeed, 0, 1)
     self.waveform = clamp(self.waveform, 0, #efxr.WAVENAME)
     self.genWave = efxr.WAVEFUNC[self.waveform]
+
+    if self.wavepow then self.wavepow = clamp(self.wavepow, 0, 4) end
 
     self.envelope.attack = clamp(self.envelope.attack, 0, 1)
     self.envelope.sustain = clamp(self.envelope.sustain, 0, 1)
@@ -417,6 +420,13 @@ function efxr.Sound:generate(rate, depth)
             -- call on the wave generator to make the waveform
             sample = self.genWave(self,phase,period,square_duty,noisebuffer)
 
+            -- do we have a quadratic to run on this?
+            if self.wavepow and self.wavepow ~= 1 then
+              sample = (sample + 1.0) * 0.5 -- move the sample into 0,1 space
+              sample = sample ^ self.wavepow
+              sample = (sample * 2.0) - 1   -- move back into -1,1 space
+            end
+
             -- Apply the lowpass filter to the sample
             local pp = fltp
             fltw = clamp(fltw * fltw_d, 0, 0.1)
@@ -534,7 +544,11 @@ function efxr.Sound:randomize(rng,seed)
     self.genWave = efxr.WAVEFUNC[self.waveform]
 
     if maybe(rng) then
-        self.repeatspeed = random(rng,rng,0, 1)
+      self.wavepow = random(rng,0.25,4)
+    end
+
+    if maybe(rng) then
+        self.repeatspeed = random(rng,0, 1)
     end
 
     if maybe(rng) then
