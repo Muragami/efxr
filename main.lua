@@ -76,11 +76,4 @@ end
 
 function love.keypressed( key, scancode, isrepeat )
   Screen:onKey(key, isrepeat)
-  if key == 'space' then
-    Screen:clear()
-    Screen:print(love.filesystem.lines('res/README.TXT'))
-  end
-  if key == 'tab' then
-    Screen:print('You pressed tab!')
-  end
 end

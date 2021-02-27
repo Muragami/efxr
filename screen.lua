@@ -61,43 +61,44 @@ function Screen:draw()
   local dx = self.posCharW + 2
   love.graphics.setFont(self.font)
   local sel = self.sel
+  local g = love.graphics
   if sel == -1 then sel = self.pos-1 end
   for i=self.scroll,self.lines+self.scroll,1 do
     local dy = (i - self.scroll) * line_height
     local ln = self.line[i]
     local fade = self.fade[i]
     if i == sel then
-      love.graphics.setColor(0.22, 0.22, 0.0, 1.0)
-      love.graphics.rectangle('fill', dx, dy, self.width, line_height)
-      love.graphics.setColor(0.3, 0.3, 0.1, 1.0)
-      love.graphics.rectangle('line', dx, dy, self.width, line_height)
-      love.graphics.setColor(0.8, 0.8, 0.4, 1.0)
-      love.graphics.print(self.posChar,0,dy)
+      g.setColor(0.22, 0.22, 0.0, 1.0)
+      g.rectangle('fill', dx, dy, self.width, line_height)
+      g.setColor(0.3, 0.3, 0.1, 1.0)
+      g.rectangle('line', dx, dy, self.width, line_height)
+      g.setColor(0.8, 0.8, 0.4, 1.0)
+      g.print(self.posChar,0,dy)
     end
     if ln == _INVALID then
       -- draw faint gibberish
       local off = Rng:random(1,128)
-      love.graphics.setColor(0.1, 0.1, 0.1, 1.0)
-      love.graphics.print(self.gibberish:sub(off,off+128),dx+0.8,dy+0.8)
-      love.graphics.setColor(0.15, 0.24, 0.15, 1.0)
-      love.graphics.print(self.gibberish:sub(off,off+128),dx,dy)
+      g.setColor(0.1, 0.1, 0.1, 1.0)
+      g.print(self.gibberish:sub(off,off+128),dx+0.8,dy+0.8)
+      g.setColor(0.15, 0.24, 0.15, 1.0)
+      g.print(self.gibberish:sub(off,off+128),dx,dy)
     else
       -- draw the line!
       local off = Rng:random(1,128)
-      love.graphics.setColor(0.1, 0.1, 0.2, 1.0)
-      love.graphics.print(self.gibberish:sub(off,off+128),dx+0.8,dy+0.8)
+      g.setColor(0.1, 0.1, 0.2, 1.0)
+      g.print(self.gibberish:sub(off,off+128),dx+0.8,dy+0.8)
       if type(ln) == 'string' then
         if fade < 0 then
           local falpha = (1.0 - (0 - fade)) * 0.8 + 0.2
-          love.graphics.setColor(0.2, 0.2, 0.2, 0.8)
-          love.graphics.print(ln,dx+0.8,dy+0.8-(fade * fade * line_height * 1.0))
-          love.graphics.setColor(0.9, 1.0, 0.9, falpha)
-          love.graphics.print(ln,dx,dy-(fade * fade * line_height * 1.0))
+          g.setColor(0.2, 0.2, 0.2, 0.8)
+          g.print(ln,dx+0.8,dy+0.8-(fade * fade * line_height * 1.0))
+          g.setColor(0.9, 1.0, 0.9, falpha)
+          g.print(ln,dx,dy-(fade * fade * line_height * 1.0))
         else
-          love.graphics.setColor(0.2, 0.2, 0.2, 1.0)
-          love.graphics.print(ln,dx+0.8,dy+0.8)
-          love.graphics.setColor(0.9, 1.0, 0.9, 1.0)
-          love.graphics.print(ln,dx,dy)
+          g.setColor(0.2, 0.2, 0.2, 1.0)
+          g.print(ln,dx+0.8,dy+0.8)
+          g.setColor(0.9, 1.0, 0.9, 1.0)
+          g.print(ln,dx,dy)
         end
       else
         ln:draw(self,i,scroll,0,dy,fade)
