@@ -80,6 +80,10 @@ function love.draw()
   Screen:draw()
 end
 
-function love.keypressed( key, scancode, isrepeat )
+function love.keypressed(key, scancode, isrepeat)
   Screen:onKey(key, isrepeat)
+end
+
+function love.textinput(txt)
+  Screen:input(txt)
 end
