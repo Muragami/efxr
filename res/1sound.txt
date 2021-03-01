@@ -12,6 +12,6 @@ _____  _____ ___         _ ___  ___  _   _ _  _ ___
 -> laser
 -> pickup
 -> powerup
-|| name:
+|| Name:
 -- source snd
 -> MAIN

@@ -84,7 +84,7 @@ end
 local function to8bFixed(val)
   local ret = ""
   -- +/- prefix
-  if val < 0 then ret = ret .. '+' else ret = ret .. '-' end
+  if val < 0 then table.insert(ret,'+' else table.insert(ret,'-' end
   -- scale and add the value
   local tst = 1000000
   local sval = val * tst
@@ -105,7 +105,7 @@ local function from8bFixed(val,pos)
   -- +/- prefix
   local neg = (string.byte (val, 1 + pos) == 45)
 
-  if val < 0 then ret = ret .. '+' else ret = ret .. '-' end
+  if val < 0 then table.insert(ret,'+' else table.insert(ret,'-' end
   -- scale and add the value
   local tst = 1000000
   local cnt = 1
@@ -842,96 +842,40 @@ function efxr.Sound:newWaveGenerator(name,func)
   efxr.WAVEFUNC[name] = func
 end
 
-function efxr.Sound:tolua(f, minify)
-    local code = "local "
-
-    -- we'll compare the current parameters with the defaults
-    local defaults = efxr.newSound()
-
-    -- this part is pretty awful but it works for now
-    function store(keys, obj)
-        local name = keys[#keys]
-
-        if type(obj) == "number" then
-            -- fetch the default value
-            local def = defaults
-            for i=2, #keys do
-                def = def[keys[i]]
-            end
-
-            if obj ~= def then
-                local k = table.concat(keys, ".")
-                if not minify then
-                    code = code .. "\n" .. string.rep(" ", #keys - 1)
-                end
-                code = code .. string.format("%s=%s;", name, obj)
-            end
-
-        elseif type(obj) == "table" then
-            local spacing = minify and "" or "\n" .. string.rep(" ", #keys - 1)
-            code = code .. spacing .. string.format("%s={", name)
-
-            for k, v in pairs(obj) do
-                local newkeys = shallowcopy(keys)
-                newkeys[#newkeys + 1] = k
-                store(newkeys, v)
-            end
-
-            code = code .. spacing .. "};"
-        end
-    end
-
-    store({"s"}, self)
-    code = code .. "\nreturn s, \"" .. efxr.VERSION .. "\""
-    return code
-end
-
-function efxr.Sound:fromlua(f)
-    local code = f
-
-    local params, version = assert(loadstring(code))()
-    -- check version compatibility
-    assert(version > efxr.VERSION, "incompatible version: " .. tostring(version))
-
-    self:resetParameters()
-    -- merge the loaded table into the own
-    mergetables(self, params)
-end
-
 function efxr.Sound:tostring()
-  local ret = ""
-  ret = ret .. to8bFixed(self.repeatspeed)
-  ret = ret .. to8bFixed(self.waveform * 0.01)  -- have to shrink it under 1.0
+  local ret = {}
+  table.insert(ret,to8bFixed(self.repeatspeed))
+  table.insert(ret,to8bFixed(self.waveform * 0.01))  -- have to shrink it under 1.0
 
-  ret = ret .. to8bFixed(self.envelope.attack)
-  ret = ret .. to8bFixed(self.envelope.sustain)
-  ret = ret .. to8bFixed(self.envelope.punch)
-  ret = ret .. to8bFixed(self.envelope.decay)
+  table.insert(ret,to8bFixed(self.envelope.attack))
+  table.insert(ret,to8bFixed(self.envelope.sustain))
+  table.insert(ret,to8bFixed(self.envelope.punch))
+  table.insert(ret,to8bFixed(self.envelope.decay))
 
-  ret = ret .. to8bFixed(self.frequency.start)
-  ret = ret .. to8bFixed(self.frequency.min)
-  ret = ret .. to8bFixed(self.frequency.slide)
-  ret = ret .. to8bFixed(self.frequency.dslide)
+  table.insert(ret,to8bFixed(self.frequency.start))
+  table.insert(ret,to8bFixed(self.frequency.min))
+  table.insert(ret,to8bFixed(self.frequency.slide))
+  table.insert(ret,to8bFixed(self.frequency.dslide))
 
-  ret = ret .. to8bFixed(self.vibrato.depth)
-  ret = ret .. to8bFixed(self.vibrato.speed)
-  ret = ret .. to8bFixed(self.vibrato.delay)
+  table.insert(ret,to8bFixed(self.vibrato.depth))
+  table.insert(ret,to8bFixed(self.vibrato.speed))
+  table.insert(ret,to8bFixed(self.vibrato.delay))
 
-  ret = ret .. to8bFixed(self.change.amount)
-  ret = ret .. to8bFixed(self.change.speed)
+  table.insert(ret,to8bFixed(self.change.amount))
+  table.insert(ret,to8bFixed(self.change.speed))
 
-  ret = ret .. to8bFixed(self.duty.ratio)
-  ret = ret .. to8bFixed(self.duty.sweep)
+  table.insert(ret,to8bFixed(self.duty.ratio))
+  table.insert(ret,to8bFixed(self.duty.sweep))
 
-  ret = ret .. to8bFixed(self.phaser.offset)
-  ret = ret .. to8bFixed(self.phaser.sweep)
+  table.insert(ret,to8bFixed(self.phaser.offset))
+  table.insert(ret,to8bFixed(self.phaser.sweep))
 
-  ret = ret .. to8bFixed(self.lowpass.cutoff)
-  ret = ret .. to8bFixed(self.lowpass.sweep)
-  ret = ret .. to8bFixed(self.lowpass.resonance)
-  ret = ret .. to8bFixed(self.highpass.cutoff)
-  ret = ret .. to8bFixed(self.highpass.sweep)
-  return ret
+  table.insert(ret,to8bFixed(self.lowpass.cutoff))
+  table.insert(ret,to8bFixed(self.lowpass.sweep))
+  table.insert(ret,to8bFixed(self.lowpass.resonance))
+  table.insert(ret,to8bFixed(self.highpass.cutoff))
+  table.insert(ret,to8bFixed(self.highpass.sweep))
+  return table.concat(ret)
 end
 
 function efxr.Sound:fromstring(s,pos)
@@ -967,6 +911,81 @@ function efxr.Sound:fromstring(s,pos)
   self.lowpass.resonance = from8bFixed(s,pos+168)
   self.highpass.cutoff = from8bFixed(s,pos+176)
   self.highpass.sweep = from8bFixed(s,pos+184)
+end
+
+function efxr.Sound:exportWAV(f, rate, depth)
+  rate = rate or 44100
+  depth = depth or 16
+  assert(sfxr.SAMPLERATE[rate], "invalid sampling rate: " .. tostring(rate))
+  assert(sfxr.BITDEPTH[depth] and depth ~= 0, "invalid bit depth: " .. tostring(depth))
+
+  f = love.filesystem.newFile(f, "wb")
+
+  -- Some utility functions
+  local function seek(pos) f:seek(pos) end
+  local function tell() return f:tell() end
+
+  local function bytes16(num)
+    return string.char(math.floor(num % 256, num / 256))
+  end
+
+  local function bytes32(num)
+    return string.char(math.floor(num % 256, bit.band(num, 0xFF00) / 256,
+      bit.band(num, 0xFF0000) / 65536, bit.band(num, 0xFF000000) / 16777216))
+  end
+
+  local function w16(num) f:write(bytes16(num)) end
+  local function w32(num) f:write(bytes32(num)) end
+  local function ws(str) f:write(str) end
+
+    -- These will hold important file positions
+    local pos_fsize
+    local pos_csize
+
+    -- Start the file by writing the RIFF header
+    ws("RIFF")
+    pos_fsize = tell()
+    w32(0) -- remaining file size, will be replaced later
+    ws("WAVE") -- type
+
+    -- Write the format chunk
+    ws("fmt ")
+    w32(16) -- chunk size
+    w16(1) -- compression code (1 = PCM)
+    w16(1) -- channel number
+    w32(freq) -- sampling rate
+    w32(freq * bits / 8) -- bytes per second
+    w16(bits / 8) -- block alignment
+    w16(bits) -- bits per sample
+
+    -- Write the header of the data chunk
+    ws("data")
+    pos_csize = tell()
+    w32(0) -- chunk size, will be replaced later
+
+    -- Aand write the actual sample data
+    local samples = 0
+
+    for v in self:generate(rate, depth) do
+        samples = samples + 1
+
+        if depth == 16 then
+            -- wrap around a bit
+            if v >= 65536 then v = 0 end
+            if v < 0 then v = 65536 + v end
+            w16(v)
+        else
+            f:write(string.char(v))
+        end
+    end
+
+    -- Seek back to the stored positions
+    seek(pos_fsize)
+    w32(pos_csize - 4 + samples * bits / 8) -- remaining file size
+    seek(pos_csize)
+    w32(samples * bits / 8) -- chunk size
+
+    f:close()
 end
 
 return efxr

@@ -28,6 +28,13 @@ SOFTWARE.
 -- some RNG!
 local Rng = love.math.newRandomGenerator()
 
+-- utility
+local function split (inputstr)
+  local t = {}
+  for str in string.gmatch(inputstr, "([^%s]+)") do table.insert(t, str) end
+  return t
+end
+
 -- I like the cut of your gib!
 local Gib = 'X24680()[]\\/[]{}'
 
@@ -43,10 +50,12 @@ function Screen:clear()
   self.posChar = '>'
   self.posCharW = self.font:getWidth(self.posChar)
   self.sel = -1
+  self.laction = -1
   self.line = {}
   self.fade = {}
   self.buffer = {}
   self.action = {}
+  self.data = {}
   self.drate = 3
   self.rate = self.drate
   self.next = 0.0
@@ -54,6 +63,10 @@ function Screen:clear()
   self.page = 0
   for i=0,self.lines,1 do self.line[i] = _INVALID self.fade[i] = 0 end
   if not self.name then self.name = "Screen" end
+end
+
+function Screen:register(name,tab)
+  self.data[name] = tab
 end
 
 function Screen:draw()
@@ -66,6 +79,7 @@ function Screen:draw()
   for i=self.scroll,self.lines+self.scroll,1 do
     local dy = (i - self.scroll) * line_height
     local ln = self.line[i]
+    local act = self.action[i]
     local fade = self.fade[i]
     if i == sel then
       g.setColor(0.22, 0.22, 0.0, 1.0)
@@ -102,6 +116,23 @@ function Screen:draw()
         end
       else
         ln:draw(self,i,scroll,0,dy,fade)
+      end
+      if act then
+        -- display data
+        if act.data and not act.edit then
+          if fade < 0 then
+            local falpha = (1.0 - (0 - fade)) * 0.8 + 0.2
+            g.setColor(0.2, 0.2, 0.2, 0.8)
+            g.print(act.data,dx+0.8+act.offset,dy+0.8-(fade * fade * line_height * 1.0))
+            g.setColor(0.9, 1.0, 0.9, falpha)
+            g.print(act.data,dx+act.offset,dy-(fade * fade * line_height * 1.0))
+          else
+            g.setColor(0.2, 0.2, 0.2, 1.0)
+            g.print(act.data,dx+0.8+act.offset,dy+0.8)
+            g.setColor(0.9, 1.0, 0.9, 1.0)
+            g.print(act.data,dx+act.offset,dy)
+          end
+        end
       end
     end
   end
@@ -159,10 +190,34 @@ function Screen:add(txt)
     self.laction = self.pos
   elseif tst == '|| ' then
     -- this is editable
-    self.action[self.pos] = { 'edit', txt:sub(4):match("([%w-._]+)") }
+    self.action[self.pos] =
+      { 'edit', txt:sub(4):match("([%w-._]+)"), offset = self.font:getWidth(txt .. " ") }
     self.laction = self.pos
-  elseif tst == '-- ' then
+
+  elseif tst == '-- ' and self.laction > -1 then
     -- this is never shown, and describes a previous editable/action!
+    local tok = split(txt:sub(4))
+    local act = self.action[self.laction]
+    if tok[1] == 'source' then
+      -- record the source of this value
+      act.source = tok[2]
+      act.data = self.data[tok[2]][act[2]]
+      act.dtype = type(act.data)
+    elseif act == 'range' then
+      -- we are a number value, record that
+      act.dtype = 'number'
+      act.min = tonumber(tok[3])
+      act.max = tonumber(tok[4])
+    elseif act == 'opts' then
+      -- we are option selection, so record that
+      act.dtype = 'string'
+      act.opts = {}
+      local i = 3
+      while tok[i] do
+        act.opts[i-2] = tok[i]
+        i = i + 1
+      end
+    end
     return
   end
   self.pos = self.pos + 1

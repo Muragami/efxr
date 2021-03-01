@@ -39,8 +39,14 @@ require 'screen'
 
 exec_table = {}
 
-exec_table['1SOUND'] = function() Screen:clear() Screen:read('res/1sound.txt') end
-exec_table['NEW_BANK'] = function() Screen:clear() Screen:read('res/new_bank.txt') end
+exec_table['1SOUND'] = function()
+  Screen:clear()
+  Screen:register('snd', { Name = "1" } )
+  Screen:read('res/1sound.txt') end
+exec_table['NEW_BANK'] = function()
+  Screen:clear()
+  Screen:register('bank', { Name = "?", Type = "LCODE" } )
+  Screen:read('res/new_bank.txt') end
 exec_table['MAIN'] = function() Screen:clear() Screen:read('res/splash.txt') end
 exec_table['ABOUT'] = function() Screen:clear() Screen:read('res/about.txt') end
 exec_table['README'] = function() Screen:clear() Screen:read('res/README.TXT') end
